@@ -2,9 +2,9 @@
   "name": "caro-back-end",
  
   "description": "caro viet nam backend",  
-  "version": "1.0.0",
+  "version": "0.0.1",
   "engines": { 
-    "node": "8.9.4" 
+    "node": "v12.10.0" 
  },
 
   "private": true,
