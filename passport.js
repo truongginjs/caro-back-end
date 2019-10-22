@@ -1,6 +1,6 @@
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
-
+const bcrypt = require("bcrypt")
 const passportJWT = require("passport-jwt");
 const JWTStrategy = passportJWT.Strategy;
 const ExtractJWT = passportJWT.ExtractJwt;
@@ -12,15 +12,15 @@ passport.use(new LocalStrategy({
     passwordField: 'password'
 },
     function (email, password, cb) {
-        //this one is typically a DB call. Assume that the returned user object is pre-formatted and ready for storing in JWT
-        return userModel.findOne({ email, password })
+        return userModel.findOne({ email })
             .then(result => {
                 const user = result[0]
-
-                if (!user) {
-                    return cb(null, false, { message: 'Incorrect email or password.' });
+                if (user && bcrypt.compareSync(password, user.password)) {
+                    const { id, email } = user
+                    return cb(null, { id, email }, { message: 'Logged In Successfully' });
                 }
-                return cb(null, user, { message: 'Logged In Successfully' });
+                return cb(null, false, { message: 'Incorrect email or password.' });
+
             })
             .catch(err => cb(err));
     }
@@ -29,15 +29,15 @@ passport.use(new LocalStrategy({
 
 passport.use(new JWTStrategy({
     jwtFromRequest: ExtractJWT.fromAuthHeaderAsBearerToken(),
-    secretOrKey: 'your_jwt_secret'
+    secretOrKey: process.env.SECRET_KEY
 },
     function (jwtPayload, cb) {
 
         //find the user in db if needed. This functionality may be omitted if you store everything you'll need in JWT payload.
-        return userModel.findOneById(jwtPayload.user.id)
+        return userModel.findOneById(jwtPayload.id)
             .then(result => {
-                const user = result[0]
-                return cb(null, user);
+                const { id, email, realname } = result[0]
+                return cb(null, { id, email, realname });
             })
             .catch(err => {
                 return cb(err);

@@ -25,8 +25,30 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 
-app.use('/user',  usersRouter);
-app.use('/me',passport.authenticate('jwt', { session: false }), meRouter);
+// Add headers
+app.use(function (req, res, next) {
+
+  // Website you wish to allow to connect
+  res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
+  // res.setHeader('Access-Control-Allow-Origin', 'https://caro-2.herokuapp.com');
+
+
+  // Request methods you wish to allow
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST');
+
+  // Request headers you wish to allow
+  res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+
+  // Set to true if you need the website to include cookies in the requests sent
+  // to the API (e.g. in case you use sessions)
+  res.setHeader('Access-Control-Allow-Credentials', true);
+
+  // Pass to next layer of middleware
+  next();
+});
+
+app.use('/user', usersRouter);
+app.use('/me', passport.authenticate('jwt', { session: false }), meRouter);
 app.use('/', indexRouter);
 
 // catch 404 and forward to error handler
@@ -45,9 +67,9 @@ app.use(function (err, req, res, next) {
   res.render('error');
 });
 
-console.log("register post: http://localhost:3000/user/register");
-console.log("login post : http://localhost:3000/user/login");
-console.log("infomation get: http://localhost:3000/me");
+console.log(`register post: http://localhost:${process.env.PORT}/user/register`);
+console.log(`login post : http://localhost:${process.env.PORT}/user/login`);
+console.log(`infomation get: http://localhost:${process.env.PORT}/me`);
 
 
 module.exports = app;

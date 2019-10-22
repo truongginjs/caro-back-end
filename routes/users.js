@@ -1,13 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const userModel = require('../models/user.model')
 const jwt = require('jsonwebtoken');
 const bcrypt = require("bcrypt")
+const passport = require("passport");
+
 const constant = require("../constants");
+const userModel = require('../models/user.model')
 
 router.post('/register', async (req, res, next) => {
   try {
-    var salt = bcrypt.genSaltSync(constant.SALT)    
+    var salt = bcrypt.genSaltSync(constant.SALT)
     const entity = {
       email: req.body.email,
       password: bcrypt.hashSync(req.body.password, salt),
@@ -16,40 +18,47 @@ router.post('/register', async (req, res, next) => {
 
     const check = await userModel.findOne({ email: req.body.email });
     if (check.length > 0) {
-      res.send("register error: Email already exists");
-      console.log(check);
+      res.status(400).json({
+        email: entity.email,
+        message: `ERROR: Email already exists`
+      });
+
     } else {
       await userModel.add(entity);
-      res.send("register success!");
+      res.json({
+        email: entity.email,
+        message: "SUCCESS"
+      })
     }
   } catch (err) {
-    console.log(err)
-    res.send("register error: " + err);
+    res.status(400).json({
+      email: entity.email,
+      message: `ERROR: ${err}`
+    });
   }
 })
 
-router.post('/login', async (req, res, next) => {
-  const entity = {
-    email: req.body.email
-  }
-  userModel.findOne(entity).then((result) => {
-    if (result.length > 0) {
-      const user = result[0]
-      if (bcrypt.compareSync(req.body.password, user.password)) {
-        jwt.sign({ user }, 'your_jwt_secret', { expiresIn: '1h' }, (err, token) => {
-          if (err) { console.log(err) }
-          res.json({ email: user.email, token })
-        });
-      }else{
-        res.send("ERROR: password or email wrong")
-      }
-    } else {
-      res.send("ERROR: email wrong")
+router.post('/login', (req, res, next) => {
+  passport.authenticate('local', { session: false }, (err, user, info) => {
+    console.log(user)
+    if (err || !user) {
+      return res.status(400).json({
+        user,
+        message: info
+      });
     }
-  }).catch(err => {
-    console.log('ERROR: Could not log in');
-    res.send("ERROR: Could not log in")
-  })
-})
+    req.login(user, { session: false }, (err) => {
+      if (err) {
+        res.status(400).json({
+          user,
+          message:`ERROR: ${err}`
+        })
+      }
+      // generate a signed son web token with the contents of user object and return it in the response
+      const token = jwt.sign(user, process.env.SECRET_KEY);
+      return res.json({ user, token });
+    });
+  })(req, res);
+});
 
 module.exports = router;

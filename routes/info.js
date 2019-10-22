@@ -2,7 +2,10 @@ const express = require('express');
 const router = express.Router();
 
 router.get('/', function (req, res, next) {
-    res.send(req.user);
+    const { email, realname } = req.user
+    res.json({
+        email, realname
+    });
 });
 
 module.exports = router;

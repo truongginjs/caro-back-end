@@ -1,6 +1,6 @@
 var { Client } = require("pg");
-let connectstr =
-  "postgres://xvjaxrqq:9eeNCGLyA8uRxEVns4DmQwvAV6x-SNBK@satao.db.elephantsql.com:5432/xvjaxrqq";
+require("dotenv").config();
+let connectstr = process.env.DB_URL
 
 var createCon = () => {
   return new Client({
@@ -36,7 +36,6 @@ module.exports = {
 
       sql = sql.substr(0, sql.length - 3);
       sql += "limit 1"
-      console.log("=============" + sql);
       connection.query(sql, values, (error, results) => {
         if (error) reject(error);
         else resolve(results.rows);
