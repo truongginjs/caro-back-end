@@ -44,7 +44,7 @@ router.post('/login', (req, res, next) => {
     if (err || !user) {
       return res.status(400).json({
         user,
-        message: info
+        ...info
       });
     }
     req.login(user, { session: false }, (err) => {

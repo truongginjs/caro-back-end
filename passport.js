@@ -16,8 +16,8 @@ passport.use(new LocalStrategy({
             .then(result => {
                 const user = result[0]
                 if (user && bcrypt.compareSync(password, user.password)) {
-                    const { id, email } = user
-                    return cb(null, { id, email }, { message: 'Logged In Successfully' });
+                    const { id, email, realname } = user
+                    return cb(null, { id, email, realname }, { message: 'Logged In Successfully' });
                 }
                 return cb(null, false, { message: 'Incorrect email or password.' });
 
